@@ -4,8 +4,7 @@ Version 0.1
 Copyright (C) 2018 Christoph Haas, christoph.h@sprinternet.at
 
 This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute it
-under certain conditions. See the file COPYING for details.
+This is free software, and you are welcome to redistribute it.
 
 gclogger is a lightweight daemon for reporting your 
 Geiger counter readings to various radiation monitoring websites.
