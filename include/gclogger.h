@@ -13,7 +13,6 @@
 #include <signal.h>
 #include <string.h>
 #include <time.h>
-#include <unistd.h>
 #include <stdbool.h>
 #include <curl/curl.h>
 
