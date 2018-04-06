@@ -12,3 +12,14 @@ Geiger counter readings to various radiation monitoring websites.
 Tested Geiger counter devices:
 - GMC-320 and GMC-320 Plus
   http://www.gqelectronicsllc.com/comersus/store/LeftStart.asp?idCategory=50
+
+
+## Usage:
+
+Compile the project using make.
+
+Then edit the example config file and run gclogger:
+
+```
+./gclogger -c gclogger.ini -d
+```
