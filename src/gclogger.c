@@ -1,3 +1,10 @@
+/*
+ * Copyright 2018 Christoph Haas
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the standard MIT license.  See LICENSE for more details.
+ */
+
 #include "gclogger.h"
 
 extern char *optarg;

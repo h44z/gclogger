@@ -1,3 +1,10 @@
+/*
+ * Copyright 2018 Christoph Haas
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the standard MIT license.  See LICENSE for more details.
+ */
+
 #include "gmc.h"
 
 int gmc_open(const char *device, int baud) {
