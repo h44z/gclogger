@@ -37,6 +37,7 @@ typedef struct
     char* safecast_device;
     char* netc_id;
     char* custlog_url;
+    char* custlog_type;
     char* custlog_id;
     char* custlog_param_id;
     char* custlog_param_cpm;

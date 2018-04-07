@@ -30,6 +30,8 @@ static int confighandler(void* config, const char* section, const char* name, co
         pconfig->dev_interval = atoi(value);
     } else if (MATCH("custlog", "url")) {
         pconfig->custlog_url = strdup(value);
+    } else if (MATCH("custlog", "type")) {
+        pconfig->custlog_type = strdup(value);
     } else if (MATCH("custlog", "id")) {
         pconfig->custlog_id = strdup(value);
     } else if (MATCH("custlog", "param_id")) {
@@ -70,6 +72,7 @@ void init_configuration(configuration* config) {
 	config->dev_longitude = 0.0;
 	config->dev_interval = 60;
 	config->custlog_url = "";
+	config->custlog_type = "GET";
 	config->custlog_id = "";
 	config->custlog_param_id = "id";
 	config->custlog_param_cpm = "cpm";
@@ -98,41 +101,75 @@ bool send_custlog(const configuration config, int cpm, float temperature, const 
 	CURL *curl;
 	CURLcode res;
 
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-
 	curl = curl_easy_init();
 
 	if(curl) {
-		char *url_buffer;
+		char *url_buffer = NULL;
 		size_t url_size;
-		// first get size of final url
-		url_size = snprintf(NULL, 0, "%s?%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s", 
-			config.custlog_url,
-			config.custlog_param_id, config.custlog_id,
-			config.custlog_param_cpm, cpm,
-			config.custlog_param_temp, temperature,
-			config.custlog_param_version, version,
-			config.custlog_param_time, mktime(tm),
-			config.custlog_param_lng, config.dev_longitude,
-			config.custlog_param_lat, config.dev_latitude,
-			config.custlog_param_loc, config.dev_location);
+		char *post_buffer = NULL;
+		size_t post_size;
 
-		// now allocate buffer and build url
-		url_buffer = (char *)malloc(url_size + 1);
-		snprintf(url_buffer, url_size+1,"%s?%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s", 
-			config.custlog_url,
-			config.custlog_param_id, config.custlog_id,
-			config.custlog_param_cpm, cpm,
-			config.custlog_param_temp, temperature,
-			config.custlog_param_version, version,
-			config.custlog_param_time, mktime(tm),
-			config.custlog_param_lng, config.dev_longitude,
-			config.custlog_param_lat, config.dev_latitude,
-			config.custlog_param_loc, config.dev_location);
+		if(strncmp(config.custlog_type, "GET", 3) == 0) {
+			// first get size of final url
+			url_size = snprintf(NULL, 0, "%s?%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s", 
+				config.custlog_url,
+				config.custlog_param_id, config.custlog_id,
+				config.custlog_param_cpm, cpm,
+				config.custlog_param_temp, temperature,
+				config.custlog_param_version, version,
+				config.custlog_param_time, mktime(tm),
+				config.custlog_param_lng, config.dev_longitude,
+				config.custlog_param_lat, config.dev_latitude,
+				config.custlog_param_loc, config.dev_location);
 
-		printf("final url: %s\n", url_buffer);
+			// now allocate buffer and build url
+			url_buffer = (char *)malloc(url_size + 1);
+			snprintf(url_buffer, url_size+1,"%s?%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s", 
+				config.custlog_url,
+				config.custlog_param_id, config.custlog_id,
+				config.custlog_param_cpm, cpm,
+				config.custlog_param_temp, temperature,
+				config.custlog_param_version, version,
+				config.custlog_param_time, mktime(tm),
+				config.custlog_param_lng, config.dev_longitude,
+				config.custlog_param_lat, config.dev_latitude,
+				config.custlog_param_loc, config.dev_location);
+
+			if(config.debug) {
+				printf("Final url: %s\n", url_buffer);
+			}
+		} else {
+			url_buffer = strdup(config.custlog_url);
+		}
 
 		curl_easy_setopt(curl, CURLOPT_URL, url_buffer);
+
+		if(strncmp(config.custlog_type, "POST", 4) == 0) {
+			// first get size of final url
+			post_size = snprintf(NULL, 0, "%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s",
+				config.custlog_param_id, config.custlog_id,
+				config.custlog_param_cpm, cpm,
+				config.custlog_param_temp, temperature,
+				config.custlog_param_version, version,
+				config.custlog_param_time, mktime(tm),
+				config.custlog_param_lng, config.dev_longitude,
+				config.custlog_param_lat, config.dev_latitude,
+				config.custlog_param_loc, config.dev_location);
+
+			// now allocate buffer and build url
+			post_buffer = (char *)malloc(post_size + 1);
+			snprintf(post_buffer, post_size+1,"%s=%s&%s=%d&%s=%f&%s=%s&%s=%ld&%s=%f&%s=%f&%s=%s",
+				config.custlog_param_id, config.custlog_id,
+				config.custlog_param_cpm, cpm,
+				config.custlog_param_temp, temperature,
+				config.custlog_param_version, version,
+				config.custlog_param_time, mktime(tm),
+				config.custlog_param_lng, config.dev_longitude,
+				config.custlog_param_lat, config.dev_latitude,
+				config.custlog_param_loc, config.dev_location);
+
+			curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_buffer);
+		}
 
 		#ifdef SKIP_PEER_VERIFICATION
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -149,6 +186,8 @@ bool send_custlog(const configuration config, int cpm, float temperature, const 
 			printf("curl_easy_perform() ok!");
 	 
 	 	free(url_buffer);
+		if(post_buffer != NULL)
+	 		free(post_buffer);
 		curl_easy_cleanup(curl);
 
 		return true;
@@ -195,6 +234,9 @@ int main(int argc, char *argv[]) {
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
 	signal(SIGHUP, signal_handler);
+
+	// setup curl
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	// parse config file
 	init_configuration(&config);
